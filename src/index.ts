@@ -198,7 +198,7 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
   const {
     post,
     on,
-    off = () => { },
+    off = () => {},
     eventNames = [],
     serialize = defaultSerialize,
     deserialize = defaultDeserialize,

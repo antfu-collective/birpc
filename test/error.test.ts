@@ -86,7 +86,7 @@ it('on serialize error', async () => {
   try {
     await alice.hi('Bob')
   }
-  catch { }
+  catch {}
 
   expect(error).toMatchInlineSnapshot(`
     {
@@ -132,7 +132,7 @@ it('on parse error', async () => {
   try {
     alice.hi('Bob')
   }
-  catch { }
+  catch {}
 
   await new Promise(r => setTimeout(r, 10))
 
