@@ -40,7 +40,7 @@ it('basic', async () => {
     .toEqual('Hi Alice, I am Bob')
 
   // one-way event
-  expect(alice.bump()).toBeUndefined()
+  expect(await alice.bump()).toBeUndefined()
 
   expect(Bob.getCount()).toBe(0)
   await new Promise(resolve => setTimeout(resolve, 1))
