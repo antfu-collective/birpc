@@ -300,6 +300,8 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
             await handler()
         }
         catch (e) {
+          clearTimeout(timeoutId)
+          rpcPromiseMap.delete(id)
           if (options.onGeneralError?.(e as Error) !== true)
             throw e
           return
