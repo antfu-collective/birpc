@@ -50,7 +50,7 @@ it('cache', async () => {
   const cacheMap = new Map<string, string>()
   const { alice } = createChannel({
     onRequest: async (req, next, send) => {
-      const key = btoa(`${req.m}-${req.a?.join('-')}`)
+      const key = `${req.m}-${req.a?.join('-')}`
       if (!cacheMap.has(key)) {
         cacheMap.set(key, await next())
       }
@@ -59,6 +59,7 @@ it('cache', async () => {
       }
     },
   })
+  expect(cacheMap).toMatchInlineSnapshot(`Map {}`)
   expect(await alice.hi('Alice')).toBe('Hi Alice, I am Bob')
   expect(spy).toBeCalledTimes(1)
   expect(await alice.hi('Alice')).toBe('Hi Alice, I am Bob')
@@ -69,4 +70,11 @@ it('cache', async () => {
   expect(spy).toBeCalledTimes(2)
   expect(await alice.getCount()).toBe(0)
   expect(spy).toBeCalledTimes(3)
+  expect(cacheMap).toMatchInlineSnapshot(`
+    Map {
+      "hi-Alice" => "Hi Alice, I am Bob",
+      "hi-Alex" => "Hi Alex, I am Bob",
+      "getCount-" => 0,
+    }
+  `)
 })
