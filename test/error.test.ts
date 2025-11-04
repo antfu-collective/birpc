@@ -144,3 +144,49 @@ it('on parse error', async () => {
     }
   `)
 })
+
+it('on async post error', async () => {
+  const channel = new MessageChannel()
+
+  let error: any
+
+  const _bob = createBirpc<AliceFunctions, BobFunctions>(
+    { ...Bob },
+    {
+      post: data => channel.port1.postMessage(data),
+      on: fn => channel.port1.on('message', fn),
+    },
+  )
+
+  const alice = createBirpc<BobFunctions, AliceFunctions>(
+    { ...Alice },
+    {
+      // mark bob's `bump` as an event without response
+      eventNames: ['bump'],
+      async post() {
+        await new Promise(r => setTimeout(r, 1))
+        throw new Error('Custom async post error')
+      },
+      on: fn => channel.port2.on('message', fn),
+      onGeneralError(err) {
+        error = err
+      },
+    },
+  )
+
+  try {
+    await alice.hi('Bob')
+  }
+  catch (e) {
+    expect(e).toStrictEqual(error)
+    expect(e).toMatchInlineSnapshot(`[Error: Custom async post error]`)
+  }
+
+  try {
+    await alice.bump()
+  }
+  catch (e) {
+    expect(e).toStrictEqual(error)
+    expect(e).toMatchInlineSnapshot(`[Error: Custom async post error]`)
+  }
+})

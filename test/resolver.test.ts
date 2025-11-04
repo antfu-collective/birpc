@@ -1,3 +1,4 @@
+import type { Thenable } from '../src'
 import { MessageChannel } from 'node:worker_threads'
 import { expect, it } from 'vitest'
 import { createBirpc } from '../src'
@@ -18,7 +19,7 @@ it('resolver', async () => {
     },
   )
 
-  let customResolverFn: ((...args: any[]) => any) | undefined
+  let customResolverFn: Thenable<((...args: any[]) => any) | undefined> | undefined
 
   const alice = createBirpc<BobFunctions, AliceFunctions>(
     { ...Alice },
@@ -46,7 +47,7 @@ it('resolver', async () => {
     .rejects
     .toThrow('[birpc] function "foo" not found')
 
-  customResolverFn = (a: string) => `Custom resolve function to ${a}`
+  customResolverFn = Promise.resolve((a: string) => `Custom resolve function to ${a}`)
 
   // @ts-expect-error `foo` is not defined
   expect(await bob.foo('Bob'))

@@ -3,8 +3,9 @@ export type ReturnType<T> = T extends (...args: any) => infer R ? R : never
 export type PromisifyFn<T> = ReturnType<T> extends Promise<any>
   ? T
   : (...args: ArgumentsType<T>) => Promise<Awaited<ReturnType<T>>>
+export type Thenable<T> = T | PromiseLike<T>
 
-export type BirpcResolver = (name: string, resolved: (...args: unknown[]) => unknown) => ((...args: unknown[]) => unknown) | undefined
+export type BirpcResolver = (name: string, resolved: (...args: unknown[]) => unknown) => Thenable<((...args: unknown[]) => unknown) | undefined>
 
 export interface ChannelOptions {
   /**
@@ -102,7 +103,7 @@ export type BirpcFn<T> = PromisifyFn<T> & {
   /**
    * Send event without asking for response
    */
-  asEvent: (...args: ArgumentsType<T>) => void
+  asEvent: (...args: ArgumentsType<T>) => Promise<void>
 }
 
 export interface BirpcGroupFn<T> {
@@ -113,7 +114,7 @@ export interface BirpcGroupFn<T> {
   /**
    * Send event without asking for response
    */
-  asEvent: (...args: ArgumentsType<T>) => void
+  asEvent: (...args: ArgumentsType<T>) => Promise<void>
 }
 
 export type BirpcReturn<RemoteFunctions, LocalFunctions = Record<string, never>> = {
@@ -239,8 +240,8 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
       if (method === 'then' && !eventNames.includes('then' as any) && !('then' in functions))
         return undefined
 
-      const sendEvent = (...args: any[]) => {
-        post(serialize(<Request>{ m: method, a: args, t: TYPE_REQUEST }))
+      const sendEvent = async (...args: any[]) => {
+        await post(serialize(<Request>{ m: method, a: args, t: TYPE_REQUEST }))
       }
       if (eventNames.includes(method as any)) {
         sendEvent.asEvent = sendEvent
@@ -259,11 +260,12 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
             _promise = undefined
           }
         }
-        return new Promise((resolve, reject) => {
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
           const id = nanoid()
           let timeoutId: ReturnType<typeof setTimeout> | undefined
 
-          function handler(next?: (res: any) => void) {
+          async function handler(next?: (res: any) => Promise<void> | void) {
             if (timeout >= 0) {
               timeoutId = setTimeout(() => {
                 try {
@@ -284,14 +286,14 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
             }
 
             rpcPromiseMap.set(id, { resolve: next ? (res) => { resolve(res); next(res) } : resolve, reject: next ? (err) => { reject(err); next(err) } : reject, timeoutId, method })
-            post(serialize(<Request>{ m: method, a: args, i: id, t: 'q' }))
+            await post(serialize(<Request>{ m: method, a: args, i: id, t: 'q' }))
           }
 
           if (options.onRequest) {
-            options.onRequest({ i: id!, m: method, a: args }, () => new Promise(handler), resolve)
+            options.onRequest({ i: id!, m: method, a: args }, () => handler(), resolve)
           }
           else {
-            handler()
+            await handler()
           }
         })
       }
@@ -347,9 +349,9 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
     if (msg.t === TYPE_REQUEST) {
       const { m: method, a: args } = msg
       let result, error: any
-      const fn = resolver
+      const fn = await (resolver
         ? resolver(method, (functions as any)[method])
-        : (functions as any)[method]
+        : (functions as any)[method])
 
       if (!fn) {
         error = new Error(`[birpc] function "${method}" not found`)
@@ -375,7 +377,7 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
         // Send data
         if (!error) {
           try {
-            post(serialize(<Response>{ t: TYPE_RESPONSE, i: msg.i, r: result }), ...extra)
+            await post(serialize(<Response>{ t: TYPE_RESPONSE, i: msg.i, r: result }), ...extra)
             return
           }
           catch (e) {
@@ -386,7 +388,7 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
         }
         // Try to send error if serialization failed
         try {
-          post(serialize(<Response>{ t: TYPE_RESPONSE, i: msg.i, e: error }), ...extra)
+          await post(serialize(<Response>{ t: TYPE_RESPONSE, i: msg.i, e: error }), ...extra)
         }
         catch (e) {
           if (options.onGeneralError?.(e as Error, method, args) !== true)
@@ -441,8 +443,8 @@ export function createBirpcGroup<RemoteFunctions = Record<string, never>, LocalF
       const sendCall = (...args: any[]) => {
         return Promise.all(callbacks.map(i => i(...args)))
       }
-      sendCall.asEvent = (...args: any[]) => {
-        callbacks.map(i => i.asEvent(...args))
+      sendCall.asEvent = async (...args: any[]) => {
+        await Promise.all(callbacks.map(i => i.asEvent(...args)))
       }
       return sendCall
     },

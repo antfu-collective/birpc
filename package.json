@@ -1,19 +1,19 @@
 {
   "name": "birpc",
   "type": "module",
-  "version": "2.5.0",
+  "version": "2.6.1",
   "packageManager": "pnpm@10.6.5",
   "description": "Message based Two-way remote procedure call",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
   "funding": "https://github.com/sponsors/antfu",
-  "homepage": "https://github.com/antfu/birpc#readme",
+  "homepage": "https://github.com/antfu-collective/birpc#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/antfu/birpc.git"
+    "url": "git+https://github.com/antfu-collective/birpc.git"
   },
   "bugs": {
-    "url": "https://github.com/antfu/birpc/issues"
+    "url": "https://github.com/antfu-collective/birpc/issues"
   },
   "keywords": [
     "rpc",
@@ -38,7 +38,7 @@
     "dev": "unbuild --stub",
     "lint": "eslint .",
     "prepublishOnly": "nr build",
-    "release": "bumpp && pnpm publish",
+    "release": "bumpp",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest"

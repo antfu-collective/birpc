@@ -34,7 +34,7 @@ const rpc = createBirpc<ServerFunctions>(
   clientFunctions,
   {
     post: data => ws.send(data),
-    on: data => ws.on('message', data),
+    on: fn => ws.on('message', fn),
     // these are required when using WebSocket
     serialize: v => JSON.stringify(v),
     deserialize: v => JSON.parse(v),
