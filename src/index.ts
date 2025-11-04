@@ -279,7 +279,8 @@ export function createBirpc<RemoteFunctions = Record<string, never>, LocalFuncti
 
           try {
             await post(serialize(<Request>{ m: method, a: args, i: id, t: 'q' }))
-          } catch (e) {
+          }
+          catch (e) {
             clearTimeout(timeoutId)
             rpcPromiseMap.delete(id)
             if (options.onGeneralError?.(e as Error, method, args) !== true)

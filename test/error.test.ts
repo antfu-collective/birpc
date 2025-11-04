@@ -182,7 +182,6 @@ it('on async post error', async () => {
     expect(e).toMatchInlineSnapshot(`[Error: Custom async post error]`)
   }
 
-
   try {
     await alice.bump()
   }
