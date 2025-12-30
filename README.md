@@ -9,7 +9,7 @@ Message-based two-way remote procedure call. Useful for WebSockets and Workers c
 - Intuitive - call remote functions just like locals, with Promise to get the response
 - TypeScript - safe function calls for arguments and returns
 - Protocol agonostic - WebSocket, MessageChannel, any protocols with messages communication would work!
-- Zero deps, ~0.5KB
+- Zero deps, ~2KB
 
 ## Examples
 
@@ -145,6 +145,49 @@ const rpc = createBirpc<BobFunctions>(
 
 await rpc.hey('Alice') // Hey Alice, I am Bob
 ```
+
+### Using window and iframes
+
+There are wrapper functions for window and iframes. You can use it to create a birpc instance for window and iframe communication.
+
+```ts
+import { createIframeBirpc } from 'birpc'
+
+const instanceId = new URLSearchParams(window.location.search).get('instanceId')
+
+const rpc = createIframeBirpc<ClientFunctions>(
+  instanceId,
+  serverFunctions,
+  {
+    targetOrigin: 'https://example.com',
+  }
+)
+```
+
+```ts
+import { createWindowBirpc } from 'birpc'
+
+// You need keep only one PostMessageManager instance in window.
+const manager = new PostMessageManager()
+
+// Each iframe need a unique instanceId.
+const instanceId = '123'
+const iframe = document.createElement('iframe')
+iframe.src = `https://example.com?instanceId=${instanceId}`
+document.body.appendChild(iframe)
+
+const rpc = createWindowBirpc<ServerFunctions>(
+  instanceId,
+  iframe,
+  manager,
+  clientFunctions,
+  {
+    targetOrigin: 'https://example.com',
+  }
+)
+```
+
+**IMPORTANT**: You always pass the `targetOrigin` when using window and iframe birpc, to avoid security issues.
 
 ### One-to-multiple Communication
 
