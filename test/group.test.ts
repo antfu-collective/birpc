@@ -1,5 +1,5 @@
 import { MessageChannel } from 'node:worker_threads'
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { createBirpcGroup } from '../src/group'
 import { createBirpc } from '../src/main'
 import * as Alice from './alice'
@@ -198,8 +198,7 @@ it('broadcast optional', async () => {
       undefined,
     ])
 
-  await new Promise(resolve => setTimeout(resolve, 1))
-  expect(Bob.getCount()).toBe(3)
+  await vi.waitFor(() => expect(Bob.getCount()).toBe(3))
 })
 
 it('group without proxify', async () => {

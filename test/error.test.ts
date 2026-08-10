@@ -1,5 +1,5 @@
 import { MessageChannel } from 'node:worker_threads'
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { createBirpc } from '../src/main'
 import * as Alice from './alice'
 import * as Bob from './bob'
@@ -134,7 +134,7 @@ it('on parse error', async () => {
   }
   catch {}
 
-  await new Promise(r => setTimeout(r, 10))
+  await vi.waitFor(() => expect(error).toBeDefined())
 
   expect(error).toMatchInlineSnapshot(`
     {
