@@ -81,15 +81,15 @@ other with the exact same DX as the WebSocket example above. Because SSE is only
 half of a duplex channel, birpc ships two channel helpers as sub-exports that
 absorb the pairing for you:
 
-- `birpc/sse/client` — `createSSEClientChannel(baseUrl, options?)` → `{ post, on }`
-- `birpc/sse/server` — `createSSESessionManager(options?)` → `{ open, handlePost }`
+- `birpc/sse/client` — `createSseClientChannel(baseUrl, options?)` → `{ post, on }`
+- `birpc/sse/server` — `createSseSessionManager(options?)` → `{ open, handlePost }`
 
 #### Client
 
 ```ts
 import type { ServerFunctions } from './types'
 import { createBirpc } from 'birpc'
-import { createSSEClientChannel } from 'birpc/sse/client'
+import { createSseClientChannel } from 'birpc/sse/client'
 
 const clientFunctions: ClientFunctions = {
   hey(name: string) {
@@ -97,7 +97,7 @@ const clientFunctions: ClientFunctions = {
   },
 }
 
-const channel = createSSEClientChannel('http://localhost:3737')
+const channel = createSseClientChannel('http://localhost:3737')
 
 const rpc = createBirpc<ServerFunctions>(clientFunctions, {
   post: channel.post,
@@ -115,7 +115,7 @@ await rpc.hi('Client') // Hi Client from server
 import type { ClientFunctions } from './types'
 import { createServer } from 'node:http'
 import { createBirpc } from 'birpc'
-import { createSSESessionManager } from 'birpc/sse/server'
+import { createSseSessionManager } from 'birpc/sse/server'
 
 const serverFunctions: ServerFunctions = {
   hi(name: string) {
@@ -123,7 +123,7 @@ const serverFunctions: ServerFunctions = {
   },
 }
 
-const sessions = createSSESessionManager()
+const sessions = createSseSessionManager()
 
 createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/sse') {
@@ -226,7 +226,7 @@ Refer to [./test/group.test.ts](./test/group.test.ts) as an example.
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg' alt="Sponsors"/>
   </a>
 </p>
 

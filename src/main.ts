@@ -330,7 +330,7 @@ export function createBirpc<
   if (proxify) {
     rpc = new Proxy({}, {
       get(_, method: string) {
-        if (Object.prototype.hasOwnProperty.call(builtinMethods, method))
+        if (Object.hasOwn(builtinMethods, method))
           return (builtinMethods as any)[method]
 
         // catch if "createBirpc" is returned from async function

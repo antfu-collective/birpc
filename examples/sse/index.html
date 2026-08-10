@@ -31,7 +31,7 @@
       console.log(msg)
     }
 
-    function createSSEClientChannel(baseUrl) {
+    function createSseClientChannel(baseUrl) {
       let sessionId
       let emit
       let resolveReady
@@ -75,7 +75,7 @@
       },
     }
 
-    const channel = createSSEClientChannel(BASE)
+    const channel = createSseClientChannel(BASE)
     const rpc = createBirpc(clientFunctions, {
       post: channel.post,
       on: channel.on,

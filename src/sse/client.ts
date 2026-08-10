@@ -40,7 +40,7 @@ export interface SSEChannel {
  *
  * @param baseUrl - Base URL of the server, e.g. `http://localhost:3737`.
  */
-export function createSSEClientChannel(
+export function createSseClientChannel(
   baseUrl: string,
   options: SSEClientChannelOptions = {},
 ): SSEChannel {

@@ -80,7 +80,7 @@ export function createBirpcGroup<
   const broadcastProxy = proxify
     ? new Proxy({}, {
       get(_, method) {
-        if (Object.prototype.hasOwnProperty.call(broadcastBuiltin, method))
+        if (Object.hasOwn(broadcastBuiltin, method))
           return (broadcastBuiltin as any)[method]
 
         const client = getClients()

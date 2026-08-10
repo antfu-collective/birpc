@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import { createBirpc } from '../../src/index'
-import { createSSESessionManager } from '../../src/sse/server'
+import { createSseSessionManager } from '../../src/sse/server'
 
 const PORT = Number(process.env.PORT) || 3737
 
@@ -25,7 +25,7 @@ const serverFunctions: ServerFunctions = {
   },
 }
 
-const sessions = createSSESessionManager()
+const sessions = createSseSessionManager()
 const html = readFileSync(fileURLToPath(new URL('./index.html', import.meta.url)), 'utf8')
 
 const server = createServer(async (req, res) => {

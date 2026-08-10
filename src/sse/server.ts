@@ -62,7 +62,7 @@ export interface SSESessionManager {
  * Create a manager that owns the per-connection SSE sessions and routes POSTs
  * to the right one.
  */
-export function createSSESessionManager(
+export function createSseSessionManager(
   options: SSESessionManagerOptions = {},
 ): SSESessionManager {
   const {

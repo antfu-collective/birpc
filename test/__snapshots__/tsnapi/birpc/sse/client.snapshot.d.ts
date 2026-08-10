@@ -16,5 +16,5 @@ export interface SSEClientChannelOptions {
 // #endregion
 
 // #region Functions
-export declare function createSSEClientChannel(_: string, _?: SSEClientChannelOptions): SSEChannel;
+export declare function createSseClientChannel(_: string, _?: SSEClientChannelOptions): SSEChannel;
 // #endregion

@@ -22,5 +22,5 @@ export interface SSESessionManagerOptions {
 // #endregion
 
 // #region Functions
-export declare function createSSESessionManager(_?: SSESessionManagerOptions): SSESessionManager;
+export declare function createSseSessionManager(_?: SSESessionManagerOptions): SSESessionManager;
 // #endregion

@@ -55,9 +55,9 @@ The **call site stays identical** to the README's WebSocket example:
 
 ```ts
 import { createBirpc } from 'birpc'
-import { createSSEClientChannel } from 'birpc/sse/client'
+import { createSseClientChannel } from 'birpc/sse/client'
 
-const channel = createSSEClientChannel(BASE)
+const channel = createSseClientChannel(BASE)
 const rpc = createBirpc<ServerFunctions, ClientFunctions>(clientFunctions, {
   post: channel.post,
   on: channel.on,
@@ -83,9 +83,9 @@ POST body. It is essentially the same shape as JSON-RPC-over-HTTP and MCP's
 
 The channel helpers ship with birpc as dedicated sub-exports:
 
-- **`birpc/sse/client`** — `createSSEClientChannel(baseUrl, options?)` → `{ post, on }`
+- **`birpc/sse/client`** — `createSseClientChannel(baseUrl, options?)` → `{ post, on }`
   (dependency-free, works in the browser and Node).
-- **`birpc/sse/server`** — `createSSESessionManager(options?)` → `{ open, handlePost }`
+- **`birpc/sse/server`** — `createSseSessionManager(options?)` → `{ open, handlePost }`
   (Node `http`, one birpc instance per SSE connection).
 
 ## Files
