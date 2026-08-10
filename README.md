@@ -73,6 +73,25 @@ wss.on('connection', (ws) => {
 })
 ```
 
+### Circular References
+
+As `JSON.stringify` does not supporting circular references, we recommend using [`structured-clone-es`](https://github.com/antfu/structured-clone-es) as the serializer when you expect to have circular references.
+
+```ts
+import { parse, stringify } from 'structured-clone-es'
+
+const rpc = createBirpc<ServerFunctions>(
+  functions,
+  {
+    post: data => ws.send(data),
+    on: fn => ws.on('message', fn),
+    // use structured-clone-es as serializer
+    serialize: v => stringify(v),
+    deserialize: v => parse(v),
+  },
+)
+```
+
 ### Using SSE + HTTP POST
 
 birpc can also run over **Server-Sent Events** (server → client) paired with
@@ -144,25 +163,6 @@ createServer(async (req, res) => {
 
 See [`examples/sse`](./examples/sse) for a complete, runnable demo (Node client +
 server and a browser page) plus a writeup of how the transport works.
-
-### Circular References
-
-As `JSON.stringify` does not supporting circular references, we recommend using [`structured-clone-es`](https://github.com/antfu/structured-clone-es) as the serializer when you expect to have circular references.
-
-```ts
-import { parse, stringify } from 'structured-clone-es'
-
-const rpc = createBirpc<ServerFunctions>(
-  functions,
-  {
-    post: data => ws.send(data),
-    on: fn => ws.on('message', fn),
-    // use structured-clone-es as serializer
-    serialize: v => stringify(v),
-    deserialize: v => parse(v),
-  },
-)
-```
 
 ### Using MessageChannel
 
