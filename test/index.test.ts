@@ -1,5 +1,5 @@
 import { MessageChannel } from 'node:worker_threads'
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { createBirpc } from '../src/main'
 import * as Alice from './alice'
 import * as Bob from './bob'
@@ -43,15 +43,13 @@ it('basic', async () => {
   expect(await alice.bump()).toBeUndefined()
 
   expect(Bob.getCount()).toBe(0)
-  await new Promise(resolve => setTimeout(resolve, 1))
-  expect(Bob.getCount()).toBe(1)
+  await vi.waitFor(() => expect(Bob.getCount()).toBe(1))
 
   expect(await alice.bumpWithReturn()).toBe(2)
   expect(Bob.getCount()).toBe(2)
 
   expect(await alice.bumpWithReturn.asEvent()).toBeUndefined()
-  await new Promise(resolve => setTimeout(resolve, 1))
-  expect(Bob.getCount()).toBe(3)
+  await vi.waitFor(() => expect(Bob.getCount()).toBe(3))
 })
 
 it('basic without proxify', async () => {
@@ -107,8 +105,7 @@ it('$call', async () => {
   expect(await alice.$callEvent('bump')).toBeUndefined()
 
   expect(Bob.getCount()).toBe(3)
-  await new Promise(resolve => setTimeout(resolve, 1))
-  expect(Bob.getCount()).toBe(4)
+  await vi.waitFor(() => expect(Bob.getCount()).toBe(4))
 })
 
 it('$callOptional', async () => {

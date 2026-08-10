@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>birpc over SSE - browser client</title>
+  <style>
+    body { font: 14px/1.5 ui-monospace, monospace; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.1rem; }
+    #log { background: #111; color: #ddd; padding: 1rem; border-radius: 8px; white-space: pre-wrap; }
+    .s { color: #7fd; } .c { color: #fd7; } .e { color: #f77; }
+  </style>
+</head>
+<body>
+  <h1>birpc over SSE (server &rarr; client) + POST (client &rarr; server)</h1>
+  <p>Open the console or read the log below. The <code>createBirpc</code> call is
+     the same shape as the README's WebSocket example.</p>
+  <div id="log"></div>
+
+  <script type="module">
+    // Minimal, dependency-free equivalent of `birpc/sse/client`, using the
+    // browser-native EventSource for the SSE (server -> client) direction and
+    // fetch() for the POST (client -> server) direction. (The published
+    // `birpc/sse/client` uses fetch streaming so it works identically here.)
+    import { createBirpc } from 'https://esm.sh/birpc@4'
+
+    const BASE = location.origin
+    const logEl = document.getElementById('log')
+    const log = (msg, cls = '') => {
+      logEl.innerHTML += `<span class="${cls}">${msg}</span>\n`
+      console.log(msg)
+    }
+
+    function createSseClientChannel(baseUrl) {
+      let sessionId
+      let emit
+      let resolveReady
+      const ready = new Promise((r) => { resolveReady = r })
+
+      const es = new EventSource(`${baseUrl}/sse`)
+      es.addEventListener('session', (ev) => {
+        sessionId = ev.data
+        resolveReady()
+      })
+      es.addEventListener('message', (ev) => {
+        // Server-initiated birpc message (flow #3).
+        emit?.(ev.data)
+      })
+
+      return {
+        post: async (data) => {
+          await ready
+          const msg = JSON.parse(data)
+          const expectsResponse = msg.t === 'q' && msg.i != null
+          const res = await fetch(`${baseUrl}/rpc`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-birpc-session': sessionId },
+            body: data,
+          })
+          const text = await res.text()
+          if (expectsResponse && text)
+            emit?.(text) // flow #2: response arrives in the POST body
+        },
+        on: (fn) => {
+          emit = fn
+          return ready
+        },
+      }
+    }
+
+    const clientFunctions = {
+      hey(name) {
+        log(`[client] server called hey(${JSON.stringify(name)})`, 'c')
+        return `Hey ${name}, from the browser`
+      },
+    }
+
+    const channel = createSseClientChannel(BASE)
+    const rpc = createBirpc(clientFunctions, {
+      post: channel.post,
+      on: channel.on,
+      serialize: v => JSON.stringify(v),
+      deserialize: v => JSON.parse(v),
+    })
+
+    ;(async () => {
+      try {
+        log(`[client] rpc.hi("Browser") -> ${JSON.stringify(await rpc.hi('Browser'))}`, 's')
+        log(`[client] rpc.add(2, 3)     -> ${JSON.stringify(await rpc.add(2, 3))}`, 's')
+      }
+      catch (e) {
+        log(`[client] error: ${e}`, 'e')
+      }
+    })()
+  </script>
+</body>
+</html>

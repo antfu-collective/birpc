@@ -91,7 +91,6 @@ const rpc = createBirpc<ServerFunctions>(
   },
 )
 ```
-
 ### Using MessageChannel
 
 [MessageChannel](https://developer.mozilla.org/en-US/docs/Web/API/MessageChannel) will automatically serialize the message and support circular references out-of-box.
@@ -150,11 +149,84 @@ await rpc.hey('Alice') // Hey Alice, I am Bob
 
 Refer to [./test/group.test.ts](./test/group.test.ts) as an example.
 
+### Using SSE + HTTP POST
+
+birpc can also run over **Server-Sent Events** (server → client) paired with
+**HTTP POST** (client → server), so a browser and an HTTP server can call each
+other with the exact same DX as the WebSocket example above. Because SSE is only
+half of a duplex channel, birpc ships two channel helpers as sub-exports that
+absorb the pairing for you:
+
+- `birpc/sse/client` — `createSseClientChannel(baseUrl, options?)` → `{ post, on }`
+- `birpc/sse/server` — `createSseSessionManager(options?)` → `{ open, handlePost }`
+
+#### Client
+
+```ts
+import type { ServerFunctions } from './types'
+import { createBirpc } from 'birpc'
+import { createSseClientChannel } from 'birpc/sse/client'
+
+const clientFunctions: ClientFunctions = {
+  hey(name: string) {
+    return `Hey ${name} from client`
+  },
+}
+
+const channel = createSseClientChannel('http://localhost:3737')
+
+const rpc = createBirpc<ServerFunctions>(clientFunctions, {
+  post: channel.post,
+  on: channel.on,
+  serialize: v => JSON.stringify(v),
+  deserialize: v => JSON.parse(v),
+})
+
+await rpc.hi('Client') // Hi Client from server
+```
+
+#### Server
+
+```ts
+import type { ClientFunctions } from './types'
+import { createServer } from 'node:http'
+import { createBirpc } from 'birpc'
+import { createSseSessionManager } from 'birpc/sse/server'
+
+const serverFunctions: ServerFunctions = {
+  hi(name: string) {
+    return `Hi ${name} from server`
+  },
+}
+
+const sessions = createSseSessionManager()
+
+createServer(async (req, res) => {
+  if (req.method === 'GET' && req.url === '/sse') {
+    const { channel } = sessions.open(req, res)
+    const rpc = createBirpc<ClientFunctions>(serverFunctions, {
+      post: channel.post,
+      on: channel.on,
+      serialize: v => JSON.stringify(v),
+      deserialize: v => JSON.parse(v),
+    })
+    await rpc.hey('Server') // Hey Server from client
+    return
+  }
+  if (req.method === 'POST' && req.url === '/rpc')
+    await sessions.handlePost(req, res)
+}).listen(3737)
+```
+
+See [`examples/sse`](./examples/sse) for a complete, runnable demo (Node client +
+server and a browser page) plus a writeup of how the transport works.
+
+
 ## Sponsors
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg' alt="Sponsors"/>
   </a>
 </p>
 
