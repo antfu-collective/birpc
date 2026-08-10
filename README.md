@@ -91,6 +91,63 @@ const rpc = createBirpc<ServerFunctions>(
   },
 )
 ```
+### Using MessageChannel
+
+[MessageChannel](https://developer.mozilla.org/en-US/docs/Web/API/MessageChannel) will automatically serialize the message and support circular references out-of-box.
+
+```ts
+export const channel = new MessageChannel()
+```
+
+#### Bob
+
+``` ts
+import type { AliceFunctions } from './types'
+import { channel } from './channel'
+
+const Bob: BobFunctions = {
+  hey(name: string) {
+    return `Hey ${name}, I am Bob`
+  }
+}
+
+const rpc = createBirpc<AliceFunctions>(
+  Bob,
+  {
+    post: data => channel.port1.postMessage(data),
+    on: fn => channel.port1.on('message', fn),
+  },
+)
+
+await rpc.hi('Bob') // Hi Bob, I am Alice
+```
+
+#### Alice
+
+``` ts
+import type { BobFunctions } from './types'
+import { channel } from './channel'
+
+const Alice: AliceFunctions = {
+  hi(name: string) {
+    return `Hi ${name}, I am Alice`
+  }
+}
+
+const rpc = createBirpc<BobFunctions>(
+  Alice,
+  {
+    post: data => channel.port2.postMessage(data),
+    on: fn => channel.port2.on('message', fn),
+  },
+)
+
+await rpc.hey('Alice') // Hey Alice, I am Bob
+```
+
+### One-to-multiple Communication
+
+Refer to [./test/group.test.ts](./test/group.test.ts) as an example.
 
 ### Using SSE + HTTP POST
 
@@ -164,63 +221,6 @@ createServer(async (req, res) => {
 See [`examples/sse`](./examples/sse) for a complete, runnable demo (Node client +
 server and a browser page) plus a writeup of how the transport works.
 
-### Using MessageChannel
-
-[MessageChannel](https://developer.mozilla.org/en-US/docs/Web/API/MessageChannel) will automatically serialize the message and support circular references out-of-box.
-
-```ts
-export const channel = new MessageChannel()
-```
-
-#### Bob
-
-``` ts
-import type { AliceFunctions } from './types'
-import { channel } from './channel'
-
-const Bob: BobFunctions = {
-  hey(name: string) {
-    return `Hey ${name}, I am Bob`
-  }
-}
-
-const rpc = createBirpc<AliceFunctions>(
-  Bob,
-  {
-    post: data => channel.port1.postMessage(data),
-    on: fn => channel.port1.on('message', fn),
-  },
-)
-
-await rpc.hi('Bob') // Hi Bob, I am Alice
-```
-
-#### Alice
-
-``` ts
-import type { BobFunctions } from './types'
-import { channel } from './channel'
-
-const Alice: AliceFunctions = {
-  hi(name: string) {
-    return `Hi ${name}, I am Alice`
-  }
-}
-
-const rpc = createBirpc<BobFunctions>(
-  Alice,
-  {
-    post: data => channel.port2.postMessage(data),
-    on: fn => channel.port2.on('message', fn),
-  },
-)
-
-await rpc.hey('Alice') // Hey Alice, I am Bob
-```
-
-### One-to-multiple Communication
-
-Refer to [./test/group.test.ts](./test/group.test.ts) as an example.
 
 ## Sponsors
 
