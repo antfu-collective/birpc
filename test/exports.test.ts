@@ -1,24 +1,9 @@
-import { x } from 'tinyexec'
-import { describe, expect, it } from 'vitest'
-import { getPackageExportsManifest } from 'vitest-package-exports'
-import yaml from 'yaml'
+import { fileURLToPath } from 'node:url'
+import { snapshotApiPerEntry } from 'tsnapi/vitest'
+import { describe } from 'vitest'
 
-describe('exports-snapshot', async () => {
-  const packages: { name: string, path: string, private?: boolean }[] = JSON.parse(
-    await x('pnpm', ['ls', '--only-projects', '-r', '--json']).then(r => r.stdout),
-  )
+const root = fileURLToPath(new URL('..', import.meta.url))
 
-  for (const pkg of packages) {
-    if (pkg.private)
-      continue
-
-    it(`${pkg.name}`, async () => {
-      const manifest = await getPackageExportsManifest({
-        importMode: 'dist',
-        cwd: pkg.path,
-      })
-      await expect(yaml.stringify(manifest.exports))
-        .toMatchFileSnapshot(`./exports/${pkg.name}.yaml`)
-    })
-  }
+describe('exports-snapshot', () => {
+  snapshotApiPerEntry(root)
 })

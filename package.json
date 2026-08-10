@@ -2,7 +2,7 @@
   "name": "birpc",
   "type": "module",
   "version": "4.0.0",
-  "packageManager": "pnpm@10.24.0",
+  "packageManager": "pnpm@11.21.0",
   "description": "Message based Two-way remote procedure call",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -24,8 +24,6 @@
     ".": "./dist/index.mjs",
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "files": [
     "dist"
@@ -41,19 +39,17 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^6.3.0",
-    "@antfu/ni": "^28.0.0",
-    "@types/node": "^24.10.1",
-    "@vitest/coverage-v8": "^4.0.15",
-    "bumpp": "^10.3.2",
-    "eslint": "^9.39.1",
-    "tinyexec": "^1.0.2",
-    "tsdown": "0.17.0-beta.5",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vite": "^7.2.6",
-    "vitest": "^4.0.15",
-    "vitest-package-exports": "^0.1.1",
-    "yaml": "^2.8.2"
+    "@antfu/eslint-config": "^9.3.0",
+    "@antfu/ni": "^30.5.0",
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "bumpp": "^12.2.0",
+    "eslint": "^10.8.1",
+    "tsdown": "^0.22.14",
+    "tsnapi": "^1.2.0",
+    "tsx": "^4.23.11",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
   }
 }

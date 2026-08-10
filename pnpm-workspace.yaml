@@ -4,3 +4,5 @@ packages:
 onlyBuiltDependencies:
   - esbuild
 ignoreWorkspaceRootCheck: true
+allowBuilds:
+  esbuild: true
