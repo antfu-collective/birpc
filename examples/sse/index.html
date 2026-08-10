@@ -18,9 +18,10 @@
   <div id="log"></div>
 
   <script type="module">
-    // Minimal, dependency-free port of ./adapter.ts's client channel, using the
+    // Minimal, dependency-free equivalent of `birpc/sse/client`, using the
     // browser-native EventSource for the SSE (server -> client) direction and
-    // fetch() for the POST (client -> server) direction.
+    // fetch() for the POST (client -> server) direction. (The published
+    // `birpc/sse/client` uses fetch streaming so it works identically here.)
     import { createBirpc } from 'https://esm.sh/birpc@4'
 
     const BASE = location.origin

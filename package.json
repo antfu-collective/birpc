@@ -22,6 +22,8 @@
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
+    "./sse/client": "./dist/sse/client.mjs",
+    "./sse/server": "./dist/sse/server.mjs",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.mts",

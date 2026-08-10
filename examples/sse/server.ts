@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import { createBirpc } from '../../src/index'
-import { createSSESessionManager } from './adapter'
+import { createSSESessionManager } from '../../src/sse/server'
 
 const PORT = Number(process.env.PORT) || 3737
 

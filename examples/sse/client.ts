@@ -8,12 +8,14 @@
  */
 import type { ClientFunctions, ServerFunctions } from './types'
 import { createBirpc } from '../../src/index'
-import { createSSEClientChannel } from './adapter'
+import { createSSEClientChannel } from '../../src/sse/client'
 
 const BASE = process.env.BASE_URL || 'http://localhost:3737'
 
 const clientFunctions: ClientFunctions = {
   hey(name) {
+    // Invoked by a SERVER-initiated call (flow #3), arriving over the SSE stream.
+    console.log(`[client] server called hey(${JSON.stringify(name)})`)
     return `Hey ${name}, from the client`
   },
 }

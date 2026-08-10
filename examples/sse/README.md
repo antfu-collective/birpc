@@ -54,6 +54,9 @@ Supporting decisions:
 The **call site stays identical** to the README's WebSocket example:
 
 ```ts
+import { createBirpc } from 'birpc'
+import { createSSEClientChannel } from 'birpc/sse/client'
+
 const channel = createSSEClientChannel(BASE)
 const rpc = createBirpc<ServerFunctions, ClientFunctions>(clientFunctions, {
   post: channel.post,
@@ -63,7 +66,7 @@ const rpc = createBirpc<ServerFunctions, ClientFunctions>(clientFunctions, {
 })
 ```
 
-…but the adapter ([`adapter.ts`](./adapter.ts)) has to:
+…but the channel helpers (`birpc/sse/client` + `birpc/sse/server`) have to:
 
 1. **Peek at the wire fields `{t, i}`** on each outgoing message to decide
    whether a POST expects a response body (client-initiated request) or is
@@ -78,15 +81,24 @@ This is the honest cost of the choice to return client-request responses in the
 POST body. It is essentially the same shape as JSON-RPC-over-HTTP and MCP's
 "Streamable HTTP" transport.
 
+The channel helpers ship with birpc as dedicated sub-exports:
+
+- **`birpc/sse/client`** — `createSSEClientChannel(baseUrl, options?)` → `{ post, on }`
+  (dependency-free, works in the browser and Node).
+- **`birpc/sse/server`** — `createSSESessionManager(options?)` → `{ open, handlePost }`
+  (Node `http`, one birpc instance per SSE connection).
+
 ## Files
 
 | File | Role |
 |------|------|
 | [`types.ts`](./types.ts) | Shared `ServerFunctions` / `ClientFunctions` contracts |
-| [`adapter.ts`](./adapter.ts) | The SSE+POST channel: `createSSEClientChannel` + `createSSESessionManager` |
-| [`server.ts`](./server.ts) | Node `http` server, one birpc instance per SSE session |
-| [`client.ts`](./client.ts) | Node client, dependency-free `fetch`-based SSE reader (CI-runnable) |
+| [`server.ts`](./server.ts) | Node `http` server using `birpc/sse/server`, one birpc instance per SSE session |
+| [`client.ts`](./client.ts) | Node client using `birpc/sse/client`, `fetch`-based SSE reader (CI-runnable) |
 | [`index.html`](./index.html) | Browser client using the native `EventSource` API (fidelity to browser ↔ server) |
+
+> The example files import from `../../src/sse/*` so they run against source; in
+> your own app you'd import from `birpc/sse/client` and `birpc/sse/server`.
 
 ## Run it
 
@@ -109,12 +121,13 @@ Captured from an actual run of `server.ts` + `client.ts` against `../../src`:
 # client
 [client] rpc.hi("Client") -> "Hi Client, from the server"
 [client] rpc.add(2, 3)   -> 5
+[client] server called hey("Server")
 [client] done
 
 # server
 [server] birpc-over-SSE listening on http://0.0.0.0:3737
 [server] open http://localhost:3737/ for the browser demo
-[server] session be00cab4 rpc.hey('Server') -> "Hey Server, from the client"
+[server] session 1f0c... rpc.hey('Server') -> "Hey Server, from the client"
 ```
 
 This exercises all four flows: client → server request/response (`hi`, `add`,
