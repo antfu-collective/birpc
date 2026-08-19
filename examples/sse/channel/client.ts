@@ -1,6 +1,9 @@
 /**
  * Client side of the birpc SSE + POST transport.
  *
+ * A copy-paste recipe, not part of the birpc package - drop this `channel/`
+ * folder into your own project and adjust it to taste.
+ *
  * Produces a `{ post, on }` channel you can hand straight to `createBirpc`,
  * exactly like the `post`/`on` pair in the WebSocket example. The SSE stream
  * (server -> client) is read with `fetch` streaming so it works in both the
@@ -8,7 +11,6 @@
  * the response to a client-initiated request both ride HTTP POST.
  */
 import type { WireMessage } from './shared'
-import { createPromiseWithResolvers } from '../utils'
 import {
   createSSEParser,
   DEFAULT_RPC_PATH,
@@ -54,7 +56,10 @@ export function createSseClientChannel(
 
   let sessionId: string | undefined
   let emit: ((data: string) => void) | undefined
-  const { promise: ready, resolve: resolveReady } = createPromiseWithResolvers<void>()
+  let resolveReady!: () => void
+  const ready = new Promise<void>((resolve) => {
+    resolveReady = resolve
+  })
 
   async function startSSE(): Promise<void> {
     const res = await fetch(`${baseUrl}${ssePath}`, {

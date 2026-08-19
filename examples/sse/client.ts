@@ -8,7 +8,7 @@
  */
 import type { ClientFunctions, ServerFunctions } from './types'
 import { createBirpc } from '../../src/index'
-import { createSseClientChannel } from '../../src/sse/client'
+import { createSseClientChannel } from './channel/client'
 
 const BASE = process.env.BASE_URL || 'http://localhost:3737'
 

@@ -1,6 +1,9 @@
 /**
  * Server side of the birpc SSE + POST transport (Node `http`).
  *
+ * A copy-paste recipe, not part of the birpc package - drop this `channel/`
+ * folder into your own project and adjust it to taste.
+ *
  * One birpc instance lives per SSE connection. `open` handles `GET /sse`
  * (streams server -> client, mints a session id) and returns a `{ post, on }`
  * channel for `createBirpc`; `handlePost` routes an incoming `POST /rpc` into

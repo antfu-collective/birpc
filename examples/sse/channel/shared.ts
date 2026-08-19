@@ -1,6 +1,9 @@
 /**
  * Shared bits for the SSE + POST birpc transport.
  *
+ * A copy-paste recipe, not part of the birpc package - drop this `channel/`
+ * folder into your own project and adjust it to taste.
+ *
  * birpc assumes one full-duplex channel, but SSE is server -> client only, so
  * these adapters pair it with HTTP POST for the client -> server direction.
  * See `./client` and `./server` for the two ends.

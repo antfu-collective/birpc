@@ -1,4 +1,4 @@
-# birpc over SSE — feasibility study + runnable PoC
+# birpc over SSE — copy-paste recipe + runnable PoC
 
 **Question:** can birpc run on an **SSE-based backend** with the **same developer
 experience** as the WebSocket example in the top-level README, while keeping
@@ -9,6 +9,12 @@ same shape as the WebSocket example. But SSE is only *half* of a duplex channel,
 so the price is paid inside the `post`/`on` adapter, which is necessarily
 **non-trivial and asymmetric**. This document explains exactly why, and the code
 here proves it end-to-end.
+
+> [!NOTE]
+> The channel helpers in [`./channel`](./channel) are **not** shipped by the
+> `birpc` package — they are a **recipe**. Copy that folder into your project and
+> adapt it (paths, auth, reconnection, framework of choice). It is dependency-free
+> and imports nothing from birpc's internals.
 
 ## Why there is any tension at all
 
@@ -55,7 +61,8 @@ The **call site stays identical** to the README's WebSocket example:
 
 ```ts
 import { createBirpc } from 'birpc'
-import { createSseClientChannel } from 'birpc/sse/client'
+// copied from ./channel into your own project
+import { createSseClientChannel } from './channel/client'
 
 const channel = createSseClientChannel(BASE)
 const rpc = createBirpc<ServerFunctions, ClientFunctions>(clientFunctions, {
@@ -66,7 +73,8 @@ const rpc = createBirpc<ServerFunctions, ClientFunctions>(clientFunctions, {
 })
 ```
 
-…but the channel helpers (`birpc/sse/client` + `birpc/sse/server`) have to:
+…but the channel helpers ([`./channel/client`](./channel/client.ts) +
+[`./channel/server`](./channel/server.ts)) have to:
 
 1. **Peek at the wire fields `{t, i}`** on each outgoing message to decide
    whether a POST expects a response body (client-initiated request) or is
@@ -81,24 +89,29 @@ This is the honest cost of the choice to return client-request responses in the
 POST body. It is essentially the same shape as JSON-RPC-over-HTTP and MCP's
 "Streamable HTTP" transport.
 
-The channel helpers ship with birpc as dedicated sub-exports:
+The channel helpers live here as source you copy, not as a package export:
 
-- **`birpc/sse/client`** — `createSseClientChannel(baseUrl, options?)` → `{ post, on }`
+- **[`./channel/client.ts`](./channel/client.ts)** — `createSseClientChannel(baseUrl, options?)` → `{ post, on }`
   (dependency-free, works in the browser and Node).
-- **`birpc/sse/server`** — `createSseSessionManager(options?)` → `{ open, handlePost }`
+- **[`./channel/server.ts`](./channel/server.ts)** — `createSseSessionManager(options?)` → `{ open, handlePost }`
   (Node `http`, one birpc instance per SSE connection).
+- **[`./channel/shared.ts`](./channel/shared.ts)** — defaults, wire-message shape, SSE frame parser.
 
 ## Files
 
 | File | Role |
 |------|------|
+| [`channel/shared.ts`](./channel/shared.ts) | Recipe: defaults, wire-message shape, SSE frame parser |
+| [`channel/client.ts`](./channel/client.ts) | Recipe: `createSseClientChannel` (browser + Node, `fetch` streaming) |
+| [`channel/server.ts`](./channel/server.ts) | Recipe: `createSseSessionManager` (Node `http`) |
 | [`types.ts`](./types.ts) | Shared `ServerFunctions` / `ClientFunctions` contracts |
-| [`server.ts`](./server.ts) | Node `http` server using `birpc/sse/server`, one birpc instance per SSE session |
-| [`client.ts`](./client.ts) | Node client using `birpc/sse/client`, `fetch`-based SSE reader (CI-runnable) |
+| [`server.ts`](./server.ts) | Node `http` server using `./channel/server`, one birpc instance per SSE session |
+| [`client.ts`](./client.ts) | Node client using `./channel/client` (CI-runnable) |
 | [`index.html`](./index.html) | Browser client using the native `EventSource` API (fidelity to browser ↔ server) |
 
-> The example files import from `../../src/sse/*` so they run against source; in
-> your own app you'd import from `birpc/sse/client` and `birpc/sse/server`.
+> The example files import birpc itself from `../../src` so they run against
+> source; in your own app you'd import from `birpc` and keep the copied
+> `channel/` folder alongside your code.
 
 ## Run it
 

@@ -5,14 +5,14 @@
  *
  * Note how the birpc setup below is IDENTICAL in shape to the WebSocket example
  * in the README - a `post`/`on`/`serialize`/`deserialize` channel. All the
- * SSE/POST plumbing is hidden inside the session manager (./adapter).
+ * SSE/POST plumbing lives in ./channel/*, a copy-paste recipe you own.
  */
 import type { ClientFunctions, ServerFunctions } from './types'
 import { readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import { createBirpc } from '../../src/index'
-import { createSseSessionManager } from '../../src/sse/server'
+import { createSseSessionManager } from './channel/server'
 
 const PORT = Number(process.env.PORT) || 3737
 

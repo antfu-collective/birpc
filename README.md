@@ -154,18 +154,18 @@ Refer to [./test/group.test.ts](./test/group.test.ts) as an example.
 birpc can also run over **Server-Sent Events** (server → client) paired with
 **HTTP POST** (client → server), so a browser and an HTTP server can call each
 other with the exact same DX as the WebSocket example above. Because SSE is only
-half of a duplex channel, birpc ships two channel helpers as sub-exports that
-absorb the pairing for you:
-
-- `birpc/sse/client` — `createSseClientChannel(baseUrl, options?)` → `{ post, on }`
-- `birpc/sse/server` — `createSseSessionManager(options?)` → `{ open, handlePost }`
+half of a duplex channel, the `post`/`on` pairing takes a bit more code than a
+WebSocket - it is **not** part of the package, but a copy-paste recipe you own:
+[`examples/sse/channel`](./examples/sse/channel) (`shared.ts` + `client.ts` +
+`server.ts`, dependency-free). Copy that folder into your project and adjust it.
 
 #### Client
 
 ```ts
 import type { ServerFunctions } from './types'
 import { createBirpc } from 'birpc'
-import { createSseClientChannel } from 'birpc/sse/client'
+// copied from examples/sse/channel
+import { createSseClientChannel } from './channel/client'
 
 const clientFunctions: ClientFunctions = {
   hey(name: string) {
@@ -191,7 +191,8 @@ await rpc.hi('Client') // Hi Client from server
 import type { ClientFunctions } from './types'
 import { createServer } from 'node:http'
 import { createBirpc } from 'birpc'
-import { createSseSessionManager } from 'birpc/sse/server'
+// copied from examples/sse/channel
+import { createSseSessionManager } from './channel/server'
 
 const serverFunctions: ServerFunctions = {
   hi(name: string) {
@@ -218,9 +219,8 @@ createServer(async (req, res) => {
 }).listen(3737)
 ```
 
-See [`examples/sse`](./examples/sse) for a complete, runnable demo (Node client +
+See [`examples/sse`](./examples/sse) for the complete, runnable demo (Node client +
 server and a browser page) plus a writeup of how the transport works.
-
 
 ## Sponsors
 
