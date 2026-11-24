@@ -80,3 +80,32 @@ it('cache', async () => {
     }
   `)
 })
+
+it('resolves when onRequest does not await next()', async () => {
+  const { alice } = createChannel({
+    onRequest: (_req, next) => {
+      void next()
+    },
+  })
+  expect(await alice.hi('Alice')).toBe('Hi Alice, I am Bob')
+})
+
+it('rejects on timeout when onRequest does not await next()', async () => {
+  const channel = new MessageChannel()
+  // No peer listens on port1, so the call gets no response
+  const alice = createBirpc<BobFunctions, AliceFunctions>(
+    Alice,
+    {
+      timeout: 100,
+      onRequest: (_req, next) => {
+        void next().catch(() => {})
+      },
+      post: data => channel.port2.postMessage(data),
+      on: (fn) => {
+        channel.port2.on('message', fn)
+      },
+    },
+  )
+  await expect(alice.hi('Alice')).rejects.toThrow('[birpc] timeout on calling "hi"')
+  channel.port1.close()
+})
