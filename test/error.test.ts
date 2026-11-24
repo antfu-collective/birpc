@@ -190,3 +190,66 @@ it('on async post error', async () => {
     expect(e).toMatchInlineSnapshot(`[Error: Custom async post error]`)
   }
 })
+
+/* eslint-disable no-throw-literal, prefer-promise-reject-errors -- these tests throw falsy values on purpose */
+it('rejects when a function throws a falsy value', async () => {
+  const channel = new MessageChannel()
+
+  const _bob = createBirpc<AliceFunctions>(
+    {
+      throwUndefined() { throw undefined },
+      throwNull() { throw null },
+      throwZero() { throw 0 },
+      throwEmpty() { throw '' },
+      throwFalse() { throw false },
+      rejectEmpty() { return Promise.reject() },
+    },
+    {
+      post: data => channel.port1.postMessage(data),
+      on: fn => channel.port1.on('message', fn),
+    },
+  )
+
+  const alice = createBirpc<any, AliceFunctions>(
+    { ...Alice },
+    {
+      post: data => channel.port2.postMessage(data),
+      on: fn => channel.port2.on('message', fn),
+    },
+  )
+
+  await expect(alice.throwUndefined()).rejects.toBe(undefined)
+  await expect(alice.throwNull()).rejects.toBe(null)
+  await expect(alice.throwZero()).rejects.toBe(0)
+  await expect(alice.throwEmpty()).rejects.toBe('')
+  await expect(alice.throwFalse()).rejects.toBe(false)
+  await expect(alice.rejectEmpty()).rejects.toBe(undefined)
+})
+
+it('calls onFunctionError when a function throws a falsy value', async () => {
+  const channel = new MessageChannel()
+  const onFunctionError = vi.fn()
+
+  const _bob = createBirpc<AliceFunctions>(
+    {
+      throwUndefined() { throw undefined },
+    },
+    {
+      post: data => channel.port1.postMessage(data),
+      on: fn => channel.port1.on('message', fn),
+      onFunctionError,
+    },
+  )
+
+  const alice = createBirpc<any, AliceFunctions>(
+    { ...Alice },
+    {
+      post: data => channel.port2.postMessage(data),
+      on: fn => channel.port2.on('message', fn),
+    },
+  )
+
+  await expect(alice.throwUndefined()).rejects.toBe(undefined)
+  expect(onFunctionError).toHaveBeenCalledWith(undefined, 'throwUndefined', [])
+})
+/* eslint-enable no-throw-literal, prefer-promise-reject-errors */
