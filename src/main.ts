@@ -299,15 +299,16 @@ export function createBirpc<
         await handler()
     }
     catch (e) {
+      clearTimeout(timeoutId)
+      _rpcPromiseMap.delete(id)
       if (options.onGeneralError?.call(rpc, e as Error) !== true)
         throw e
       return
     }
-    finally {
-      clearTimeout(timeoutId)
-      _rpcPromiseMap.delete(id)
-    }
 
+    // Keep the pending call and its timer when `onRequest` returns before the response,
+    // for example when it calls `next()` without awaiting it.
+    // The response or the timeout removes them.
     return promise
   }
 
