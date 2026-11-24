@@ -399,6 +399,8 @@ export function createBirpc<
     if (msg.t === TYPE_REQUEST) {
       const { m: method, a: args, o: optional } = msg
       let result, error: any
+      // A function can throw a falsy value, so track the failure separately from the error value
+      let failed = false
       let fn = await (resolver
         ? resolver.call(rpc, method, ($functions as any)[method])
         : ($functions as any)[method])
@@ -408,6 +410,7 @@ export function createBirpc<
 
       if (!fn) {
         error = new Error(`[birpc] function "${method}" not found`)
+        failed = true
       }
       else {
         try {
@@ -415,17 +418,18 @@ export function createBirpc<
         }
         catch (e) {
           error = e
+          failed = true
         }
       }
 
       if (msg.i) {
-        if (error && options.onFunctionError) {
+        if (failed && options.onFunctionError) {
           if (options.onFunctionError.call(rpc, error, method, args) === true)
             return
         }
 
         // Send data
-        if (!error) {
+        if (!failed) {
           try {
             await post(serialize(<RpcResponse>{ t: TYPE_RESPONSE, i: msg.i, r: result }), ...extra)
             return
@@ -452,7 +456,8 @@ export function createBirpc<
       if (promise) {
         clearTimeout(promise.timeoutId)
 
-        if (error)
+        // An error response always has the `e` key, also when the thrown value is falsy
+        if ('e' in msg)
           promise.reject(error)
 
         else
